@@ -1,0 +1,13 @@
+{
+  "name": "rose-task-completed-bar",
+  "version": "1.0.0",
+  "description": "Fixed \"Task Completed\" bar shown above the Rose query box when an agent finishes its task.",
+  "type": "module",
+  "main": "src/task-completed-bar.js",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "playwright-core": "1.64.0"
+  }
+}
