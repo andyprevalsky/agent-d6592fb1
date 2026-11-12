@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  Demo of the Task Completed bar in a Rose-style agent conversation. Layout and theme tokens
+  mirror the Rose preview host (sidebar, scrolling transcript, composer pinned at the bottom).
+  Controls at the top simulate the agent's status; ?status=COMPLETED preselects it.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rose — Task Completed bar</title>
+<style>
+  :root {
+    --background: 240 15% 98%; --foreground: 240 15% 8%; --card: 0 0% 100%; --card-foreground: 240 15% 8%;
+    --primary: 240 15% 8%; --primary-foreground: 240 15% 98%; --muted-foreground: 240 8% 45%;
+    --border: 240 8% 88%; --ring: 240 15% 8%; --radius: 0.75rem;
+    --sidebar-background: 0 0% 98%; --sidebar-foreground: 240 5.3% 26.1%; --sidebar-primary: 240 5.9% 10%;
+    --sidebar-accent: 240 4.8% 95.9%; --sidebar-accent-foreground: 240 5.9% 10%; --sidebar-border: 220 13% 91%;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: hsl(var(--foreground)); background: hsl(var(--background)); overflow: hidden; }
+  #app { display: flex; height: 100dvh; }
+  aside { width: 272px; flex: none; display: flex; flex-direction: column; gap: 8px; padding: 14px 12px; background: hsl(var(--sidebar-background)); color: hsl(var(--sidebar-foreground)); border-right: 1px solid hsl(var(--sidebar-border)); }
+  aside .brand { font-weight: 650; font-size: 17px; color: hsl(var(--sidebar-primary)); padding: 4px 6px; }
+  aside .agent { padding: 8px 10px; border-radius: calc(var(--radius) - 4px); font-size: 14px; }
+  aside .agent.active { background: hsl(var(--sidebar-accent)); color: hsl(var(--sidebar-accent-foreground)); font-weight: 600; }
+  main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .scroll { flex: 1; overflow: auto; padding: 32px 24px 16px; }
+  .column { max-width: 760px; margin: 0 auto; }
+  .msg { margin: 12px 0; }
+  .msg.user { margin-left: auto; width: fit-content; max-width: 80%; padding: 10px 14px; border-radius: calc(var(--radius) + 4px); background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+  .composer { margin: 0 auto 20px; width: min(760px, calc(100% - 32px)); display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: calc(var(--radius) + 8px); background: hsl(var(--card)); border: 1px solid hsl(var(--border)); box-shadow: 0 10px 30px -10px hsl(240 15% 8% / 0.15); }
+  .composer input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; background: transparent; color: inherit; }
+  .composer b { width: 32px; height: 32px; flex: none; border-radius: 999px; background: hsl(var(--primary)); }
+  .sim { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: hsl(var(--muted-foreground)); padding: 8px 0 0; }
+  .sim select { font: inherit; }
+  @media (max-width: 767px) { aside { display: none; } .scroll { padding: 20px 14px 12px; } .composer { width: calc(100% - 24px); margin-bottom: 12px; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <div class="brand">Rose</div>
+    <div class="agent active">Task Completion Bar</div>
+    <div class="agent">Reply to the Lisbon offsite thread</div>
+    <div class="agent">Book dinner for Friday</div>
+  </aside>
+  <main>
+    <div class="scroll">
+      <div class="column">
+        <div class="sim">
+          Simulate agent status:
+          <select id="status" aria-label="Agent status">
+            <option>ACTIVE</option>
+            <option>COMPLETED</option>
+          </select>
+          <span id="log" data-testid="archive-log"></span>
+        </div>
+        <div class="msg user">Add a Task Completed bar above the query box.</div>
+        <div class="msg assistant">Working on it — the bar appears here once the task is done.</div>
+      </div>
+    </div>
+    <div class="composer" data-testid="composer"><input placeholder="Ask Rose anything" aria-label="Ask Rose anything"><b></b></div>
+  </main>
+</div>
+<script type="module">
+  import { mountTaskCompletedBar } from '../src/task-completed-bar.js';
+
+  const select = document.getElementById('status');
+  const log = document.getElementById('log');
+  const initial = new URLSearchParams(location.search).get('status');
+  if (initial) select.value = initial.toUpperCase();
+
+  let agent = { id: 'demo-agent', title: 'Task Completion Bar', status: select.value };
+  const bar = mountTaskCompletedBar(document.querySelector('.composer'), {
+    // In Rose this calls the archive-agent action; the demo just records it.
+    onArchive: async (a) => { agent = { ...a, archived: true }; log.textContent = `archived ${a.id}`; },
+  });
+  bar.update(agent);
+  select.addEventListener('change', () => { agent = { ...agent, status: select.value, archived: false }; log.textContent = ''; bar.update(agent); });
+  window.__demo = { bar, setAgent: (a) => { agent = a; bar.update(a); } };
+</script>
+</body>
+</html>
